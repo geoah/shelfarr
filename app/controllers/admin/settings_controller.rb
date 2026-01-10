@@ -38,27 +38,42 @@ module Admin
       AudiobookshelfClient.reset_connection! if params[:settings]&.keys&.any? { |k| k.to_s.start_with?("audiobookshelf") }
       ProwlarrClient.reset_connection! if params[:settings]&.keys&.any? { |k| k.to_s.start_with?("prowlarr") }
 
+      @settings_by_category = SettingsService.all_by_category
+      @audiobookshelf_libraries = fetch_audiobookshelf_libraries
+
       respond_to do |format|
         if errors.any?
           format.html { redirect_to admin_settings_path, alert: errors.join(". ") }
           format.turbo_stream do
             flash.now[:alert] = errors.join(". ")
-            render turbo_stream: turbo_stream.update("flash", partial: "shared/flash")
+            render turbo_stream: [
+              turbo_stream.update("settings-form", partial: "admin/settings/form"),
+              turbo_stream.update("flash", partial: "shared/flash")
+            ]
           end
         else
           format.html { redirect_to admin_settings_path, notice: "Settings updated successfully." }
           format.turbo_stream do
             flash.now[:notice] = "Settings updated successfully."
-            render turbo_stream: turbo_stream.update("flash", partial: "shared/flash")
+            render turbo_stream: [
+              turbo_stream.update("settings-form", partial: "admin/settings/form"),
+              turbo_stream.update("flash", partial: "shared/flash")
+            ]
           end
         end
       end
     rescue ArgumentError => e
+      @settings_by_category = SettingsService.all_by_category
+      @audiobookshelf_libraries = fetch_audiobookshelf_libraries
+
       respond_to do |format|
         format.html { redirect_to admin_settings_path, alert: e.message }
         format.turbo_stream do
           flash.now[:alert] = e.message
-          render turbo_stream: turbo_stream.update("flash", partial: "shared/flash")
+          render turbo_stream: [
+            turbo_stream.update("settings-form", partial: "admin/settings/form"),
+            turbo_stream.update("flash", partial: "shared/flash")
+          ]
         end
       end
     end
