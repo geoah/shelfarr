@@ -123,7 +123,7 @@ module DownloadClients
         Rails.logger.error "[Sabnzbd] API error (status #{response.status}): #{response.body.inspect.truncate(200)}"
         raise Base::Error, "SABnzbd API error: #{response.status}"
       end
-    rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+    rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::SSLError => e
       Rails.logger.error "[Sabnzbd] Connection error: #{e.message}"
       raise Base::ConnectionError, "Failed to connect to SABnzbd: #{e.message}"
     end

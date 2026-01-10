@@ -120,7 +120,7 @@ class AudiobookshelfClient
 
     def request
       yield
-    rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+    rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::SSLError => e
       raise ConnectionError, "Failed to connect to Audiobookshelf: #{e.message}"
     end
 

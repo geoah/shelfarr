@@ -212,7 +212,7 @@ module DownloadClients
       else
         raise Base::Error, "qBittorrent API error: #{response.status}"
       end
-    rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+    rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::SSLError => e
       raise Base::ConnectionError, "Failed to connect to qBittorrent: #{e.message}"
     end
 

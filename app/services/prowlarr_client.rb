@@ -172,7 +172,7 @@ class ProwlarrClient
       else
         raise Error, "Prowlarr API error: #{response.status}"
       end
-    rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+    rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::SSLError => e
       raise ConnectionError, "Failed to connect to Prowlarr: #{e.message}"
     end
 

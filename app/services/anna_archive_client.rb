@@ -51,7 +51,7 @@ class AnnaArchiveClient
       end
 
       parse_search_results(response.body, limit)
-    rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+    rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::SSLError => e
       raise ConnectionError, "Failed to connect to Anna's Archive: #{e.message}"
     end
 
@@ -80,7 +80,7 @@ class AnnaArchiveClient
       download_url
     rescue JSON::ParserError => e
       raise Error, "Failed to parse Anna's Archive response: #{e.message}"
-    rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+    rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::SSLError => e
       raise ConnectionError, "Failed to connect to Anna's Archive API: #{e.message}"
     end
 

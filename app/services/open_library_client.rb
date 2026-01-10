@@ -171,7 +171,7 @@ class OpenLibraryClient
       else
         raise Error, "API request failed with status #{response.status}"
       end
-    rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+    rescue Faraday::ConnectionFailed, Faraday::TimeoutError, Faraday::SSLError => e
       raise ConnectionError, "Failed to connect to Open Library: #{e.message}"
     end
 
