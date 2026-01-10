@@ -34,13 +34,29 @@ module Admin
         end
       end
 
-      if errors.any?
-        redirect_to admin_settings_path, alert: errors.join(". ")
-      else
-        redirect_to admin_settings_path, notice: "Settings updated successfully."
+      respond_to do |format|
+        if errors.any?
+          format.html { redirect_to admin_settings_path, alert: errors.join(". ") }
+          format.turbo_stream do
+            flash.now[:alert] = errors.join(". ")
+            render turbo_stream: turbo_stream.update("flash", partial: "shared/flash")
+          end
+        else
+          format.html { redirect_to admin_settings_path, notice: "Settings updated successfully." }
+          format.turbo_stream do
+            flash.now[:notice] = "Settings updated successfully."
+            render turbo_stream: turbo_stream.update("flash", partial: "shared/flash")
+          end
+        end
       end
     rescue ArgumentError => e
-      redirect_to admin_settings_path, alert: e.message
+      respond_to do |format|
+        format.html { redirect_to admin_settings_path, alert: e.message }
+        format.turbo_stream do
+          flash.now[:alert] = e.message
+          render turbo_stream: turbo_stream.update("flash", partial: "shared/flash")
+        end
+      end
     end
 
     def test_prowlarr
