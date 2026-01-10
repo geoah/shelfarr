@@ -34,6 +34,10 @@ module Admin
         end
       end
 
+      # Reset cached connections when relevant settings change
+      AudiobookshelfClient.reset_connection! if params[:settings]&.keys&.any? { |k| k.to_s.start_with?("audiobookshelf") }
+      ProwlarrClient.reset_connection! if params[:settings]&.keys&.any? { |k| k.to_s.start_with?("prowlarr") }
+
       respond_to do |format|
         if errors.any?
           format.html { redirect_to admin_settings_path, alert: errors.join(". ") }
