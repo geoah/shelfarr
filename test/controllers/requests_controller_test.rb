@@ -190,6 +190,74 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  # Retry tests
+  test "retry queues pending request for immediate processing" do
+    assert @pending_request.pending?
+
+    post retry_request_path(@pending_request)
+
+    @pending_request.reload
+    assert @pending_request.pending?
+    assert_redirected_to request_path(@pending_request)
+    assert_match(/queued for retry/, flash[:notice])
+  end
+
+  test "retry queues not_found request for immediate processing" do
+    not_found_request = requests(:not_found_waiting)
+    assert not_found_request.not_found?
+    assert not_found_request.next_retry_at.present?
+
+    post retry_request_path(not_found_request)
+
+    not_found_request.reload
+    assert not_found_request.pending?
+    assert_nil not_found_request.next_retry_at
+    assert_redirected_to request_path(not_found_request)
+    assert_match(/queued for retry/, flash[:notice])
+  end
+
+  test "retry queues failed request for immediate processing" do
+    assert @failed_request.failed?
+
+    post retry_request_path(@failed_request)
+
+    @failed_request.reload
+    assert @failed_request.pending?
+    assert_redirected_to request_path(@failed_request)
+    assert_match(/queued for retry/, flash[:notice])
+  end
+
+  test "retry rejects non-retryable status" do
+    @pending_request.update!(status: :downloading)
+
+    post retry_request_path(@pending_request)
+
+    assert_redirected_to request_path(@pending_request)
+    assert_includes flash[:alert], "Cannot retry"
+  end
+
+  test "user cannot retry another user's request" do
+    other_user = users(:two)
+    other_request = Request.create!(
+      book: books(:ebook_pending),
+      user: other_user,
+      status: :pending
+    )
+
+    post retry_request_path(other_request)
+    assert_response :not_found
+  end
+
+  test "admin can retry any user's request" do
+    sign_out
+    sign_in_as(@admin)
+
+    post retry_request_path(@pending_request)
+
+    assert_redirected_to request_path(@pending_request)
+    assert_match(/queued for retry/, flash[:notice])
+  end
+
   # Download tests
   test "download requires authentication" do
     sign_out

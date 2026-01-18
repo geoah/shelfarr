@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class RequestsController < ApplicationController
-  before_action :set_request, only: [ :show, :destroy ]
+  before_action :set_request, only: [ :show, :destroy, :retry ]
   before_action :set_request_for_download, only: [ :download ]
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
@@ -127,6 +127,21 @@ class RequestsController < ApplicationController
     end
 
     redirect_to requests_path, notice: "Request cancelled"
+  end
+
+  def retry
+    unless @request.user == Current.user || Current.user.admin?
+      redirect_to requests_path, alert: "You cannot retry this request"
+      return
+    end
+
+    unless @request.can_retry?
+      redirect_to @request, alert: "Cannot retry request in #{@request.status} status"
+      return
+    end
+
+    @request.retry_now!
+    redirect_to @request, notice: "Request queued for retry"
   end
 
   def download

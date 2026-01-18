@@ -210,6 +210,39 @@
       <% end %>
     </div>
 
+    <% if @request.can_retry? && (@request.user == Current.user || Current.user.admin?) %>
+      <div class="px-6 py-4 bg-gray-800/50 border-t border-gray-800 flex justify-end" data-controller="delete-modal">
+        <button type="button"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition"
+                data-action="click->delete-modal#open">
+          Retry Request
+        </button>
+
+        <dialog data-delete-modal-target="modal"
+                class="bg-gray-900 border border-gray-700 rounded-lg p-0 backdrop:bg-black/50 max-w-md w-full"
+                data-action="click->delete-modal#backdropClick">
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-white mb-2">Retry Request</h3>
+            <p class="text-gray-400 mb-4">This will queue the request for "<%= @request.book.title %>" to be searched again.</p>
+
+            <%= form_with url: retry_request_path(@request), method: :post, local: true do %>
+              <div class="flex justify-end gap-3 pt-2">
+                <button type="button"
+                        class="px-4 py-2 text-gray-400 hover:text-white transition"
+                        data-action="click->delete-modal#close">
+                  Cancel
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition">
+                  Retry Request
+                </button>
+              </div>
+            <% end %>
+          </div>
+        </dialog>
+      </div>
+    <% end %>
+
     <% if @request.can_be_cancelled? %>
       <div class="px-6 py-4 bg-gray-800/50 border-t border-gray-800 flex justify-end" data-controller="delete-modal">
         <button type="button"
