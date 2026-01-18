@@ -7,9 +7,9 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     @user = users(:one)
   end
 
-  test "allows request for new work" do
+  test "allows request for new book" do
     result = DuplicateDetectionService.check(
-      work_id: "OL_NEW_WORK",
+      work_id: "12345",
       book_type: "audiobook"
     )
 
@@ -18,16 +18,16 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     assert_nil result.existing_book
   end
 
-  test "blocks request for same work+type already acquired" do
+  test "blocks request for same book+type already acquired" do
     book = Book.create!(
       title: "Existing Book",
       book_type: :audiobook,
-      open_library_work_id: "OL_ACQUIRED",
+      open_library_work_id: "111111",
       file_path: "/audiobooks/Author/Book"
     )
 
     result = DuplicateDetectionService.check(
-      work_id: "OL_ACQUIRED",
+      work_id: "111111",
       book_type: "audiobook"
     )
 
@@ -36,31 +36,11 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     assert_equal book, result.existing_book
   end
 
-  test "blocks request for same edition already acquired" do
-    book = Book.create!(
-      title: "Existing Book",
-      book_type: :ebook,
-      open_library_work_id: "OL_WORK",
-      open_library_edition_id: "OL_EDITION",
-      file_path: "/ebooks/Book.epub"
-    )
-
-    result = DuplicateDetectionService.check(
-      work_id: "OL_WORK",
-      edition_id: "OL_EDITION",
-      book_type: "ebook"
-    )
-
-    assert result.block?
-    assert_includes result.message, "exact edition"
-    assert_equal book, result.existing_book
-  end
-
   test "blocks request when active request exists" do
     book = Book.create!(
       title: "Pending Book",
       book_type: :audiobook,
-      open_library_work_id: "OL_PENDING"
+      open_library_work_id: "222222"
     )
 
     request = Request.create!(
@@ -70,7 +50,7 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     )
 
     result = DuplicateDetectionService.check(
-      work_id: "OL_PENDING",
+      work_id: "222222",
       book_type: "audiobook"
     )
 
@@ -80,16 +60,16 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     assert_equal request, result.existing_request
   end
 
-  test "warns when same work exists as different type" do
+  test "warns when same book exists as different type" do
     Book.create!(
       title: "Has Audiobook",
       book_type: :audiobook,
-      open_library_work_id: "OL_BOTH",
+      open_library_work_id: "333333",
       file_path: "/audiobooks/Author/Book"
     )
 
     result = DuplicateDetectionService.check(
-      work_id: "OL_BOTH",
+      work_id: "333333",
       book_type: "ebook"
     )
 
@@ -101,7 +81,7 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     book = Book.create!(
       title: "Failed Book",
       book_type: :ebook,
-      open_library_work_id: "OL_FAILED"
+      open_library_work_id: "444444"
     )
 
     Request.create!(
@@ -111,7 +91,7 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     )
 
     result = DuplicateDetectionService.check(
-      work_id: "OL_FAILED",
+      work_id: "444444",
       book_type: "ebook"
     )
 
@@ -123,7 +103,7 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     book = Book.create!(
       title: "Not Found Book",
       book_type: :audiobook,
-      open_library_work_id: "OL_NOT_FOUND"
+      open_library_work_id: "555555"
     )
 
     Request.create!(
@@ -133,7 +113,7 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     )
 
     result = DuplicateDetectionService.check(
-      work_id: "OL_NOT_FOUND",
+      work_id: "555555",
       book_type: "audiobook"
     )
 
@@ -143,7 +123,7 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
 
   test "can_request? returns true for allowed" do
     assert DuplicateDetectionService.can_request?(
-      work_id: "OL_BRAND_NEW",
+      work_id: "666666",
       book_type: "audiobook"
     )
   end
@@ -152,12 +132,12 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     Book.create!(
       title: "Audiobook Only",
       book_type: :audiobook,
-      open_library_work_id: "OL_WARN",
+      open_library_work_id: "777777",
       file_path: "/audiobooks/Author/Book"
     )
 
     assert DuplicateDetectionService.can_request?(
-      work_id: "OL_WARN",
+      work_id: "777777",
       book_type: "ebook"
     )
   end
@@ -166,12 +146,12 @@ class DuplicateDetectionServiceTest < ActiveSupport::TestCase
     Book.create!(
       title: "Acquired",
       book_type: :ebook,
-      open_library_work_id: "OL_BLOCKED",
+      open_library_work_id: "888888",
       file_path: "/ebooks/Book.epub"
     )
 
     refute DuplicateDetectionService.can_request?(
-      work_id: "OL_BLOCKED",
+      work_id: "888888",
       book_type: "ebook"
     )
   end

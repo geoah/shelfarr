@@ -13,8 +13,8 @@ class RequestRetryTest < ActiveSupport::TestCase
 
   test "processable returns pending requests ordered by created_at" do
     # Create two pending requests with specific order
-    older_book = Book.create!(title: "Older Processable", book_type: :ebook, open_library_work_id: "OL_OLDER_P")
-    newer_book = Book.create!(title: "Newer Processable", book_type: :ebook, open_library_work_id: "OL_NEWER_P")
+    older_book = Book.create!(title: "Older Processable", book_type: :ebook, open_library_work_id: "900001")
+    newer_book = Book.create!(title: "Newer Processable", book_type: :ebook, open_library_work_id: "900002")
 
     older_request = Request.create!(book: older_book, user: users(:one), status: :pending, created_at: 2.days.ago)
     newer_request = Request.create!(book: newer_book, user: users(:one), status: :pending, created_at: 1.day.ago)
@@ -149,7 +149,7 @@ class RequestRetryTest < ActiveSupport::TestCase
   end
 
   test "retry_now! retries download when there is a selected result and failed download" do
-    book = Book.create!(title: "Test Book", book_type: :ebook, open_library_work_id: "OL_RETRY_DL")
+    book = Book.create!(title: "Test Book", book_type: :ebook, open_library_work_id: "900003")
     request = Request.create!(
       book: book,
       user: users(:one),
@@ -189,7 +189,7 @@ class RequestRetryTest < ActiveSupport::TestCase
   end
 
   test "retry_now! restarts search when there is a selected result but no failed download" do
-    book = Book.create!(title: "Test Book 2", book_type: :ebook, open_library_work_id: "OL_RETRY_SEARCH")
+    book = Book.create!(title: "Test Book 2", book_type: :ebook, open_library_work_id: "900004")
     request = Request.create!(
       book: book,
       user: users(:one),

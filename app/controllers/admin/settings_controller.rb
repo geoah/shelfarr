@@ -37,6 +37,7 @@ module Admin
       # Reset cached connections when relevant settings change
       AudiobookshelfClient.reset_connection! if params[:settings]&.keys&.any? { |k| k.to_s.start_with?("audiobookshelf") }
       ProwlarrClient.reset_connection! if params[:settings]&.keys&.any? { |k| k.to_s.start_with?("prowlarr") }
+      HardcoverClient.reset_connection! if params[:settings]&.keys&.any? { |k| k.to_s.start_with?("hardcover") }
 
       @settings_by_category = SettingsService.all_by_category
       @audiobookshelf_libraries = fetch_audiobookshelf_libraries
@@ -106,6 +107,21 @@ module Admin
       end
     rescue AudiobookshelfClient::Error => e
       respond_with_flash(alert: "Audiobookshelf error: #{e.message}")
+    end
+
+    def test_hardcover
+      unless HardcoverClient.configured?
+        respond_with_flash(alert: "Hardcover is not configured. Enter API key first.")
+        return
+      end
+
+      if HardcoverClient.test_connection
+        respond_with_flash(notice: "Hardcover connection successful!")
+      else
+        respond_with_flash(alert: "Hardcover connection failed.")
+      end
+    rescue HardcoverClient::Error => e
+      respond_with_flash(alert: "Hardcover error: #{e.message}")
     end
 
     def test_oidc

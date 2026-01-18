@@ -33,8 +33,9 @@ class SettingsService
     retry_base_delay_hours: { type: "integer", default: 24, category: "queue", description: "Base delay in hours before retrying not_found requests" },
     retry_max_delay_days: { type: "integer", default: 7, category: "queue", description: "Maximum delay in days between retries" },
 
-    # Open Library
-    open_library_search_limit: { type: "integer", default: 20, category: "open_library", description: "Maximum number of search results to return" },
+    # Hardcover
+    hardcover_api_key: { type: "string", default: "", category: "hardcover", description: "Hardcover API key (get from hardcover.app user settings)" },
+    hardcover_search_limit: { type: "integer", default: 20, category: "hardcover", description: "Maximum number of search results to return" },
 
     # Health Monitoring
     health_check_interval: { type: "integer", default: 300, category: "health", description: "Seconds between system health checks (default: 5 minutes)" },
@@ -80,7 +81,7 @@ class SettingsService
     "anna_archive" => "Anna's Archive",
     "paths" => "Output Paths",
     "queue" => "Queue Settings",
-    "open_library" => "Open Library",
+    "hardcover" => "Hardcover",
     "health" => "Health Monitoring",
     "auto_select" => "Auto-Selection",
     "language" => "Language & Matching",
@@ -180,6 +181,10 @@ class SettingsService
 
     def anna_archive_configured?
       get(:anna_archive_enabled, default: false) && configured?(:anna_archive_api_key)
+    end
+
+    def hardcover_configured?
+      configured?(:hardcover_api_key)
     end
 
     def oidc_configured?

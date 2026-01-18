@@ -94,13 +94,13 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     existing_book = Book.create!(
       title: "Existing",
       book_type: :ebook,
-      open_library_work_id: "OL_EXISTING_W"
+      open_library_work_id: "999001"
     )
 
     assert_no_difference "Book.count" do
       assert_difference "Request.count", 1 do
         post requests_path, params: {
-          work_id: "OL_EXISTING_W",
+          work_id: "999001",
           title: "Existing",
           book_type: "ebook"
         }
@@ -112,13 +112,13 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     book = Book.create!(
       title: "Acquired",
       book_type: :audiobook,
-      open_library_work_id: "OL_ACQUIRED_W",
+      open_library_work_id: "999002",
       file_path: "/audiobooks/Author/Acquired"
     )
 
     assert_no_difference [ "Book.count", "Request.count" ] do
       post requests_path, params: {
-        work_id: "OL_ACQUIRED_W",
+        work_id: "999002",
         title: "Acquired",
         book_type: "audiobook"
       }
@@ -147,7 +147,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     book = Book.create!(
       title: "Orphan Book",
       book_type: :ebook,
-      open_library_work_id: "OL_ORPHAN_W"
+      open_library_work_id: "999003"
     )
     request = Request.create!(book: book, user: @user, status: :pending)
 

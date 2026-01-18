@@ -1,0 +1,25 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.hardcover.app/v1/graphql
+    body:
+      encoding: UTF-8
+      string: '{"query":"\n        query SearchBooks($query: String!, $perPage: Int!) {\n          search(query: $query, query_type: Book, per_page: $perPage) {\n            results\n          }\n        }\n      ","variables":{"query":"harry potter","perPage":20}}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <HARDCOVER_API_KEY>
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"data":{"search":{"results":{"facet_counts":[],"found":843,"hits":[{"document":{"activities_count":4132,"alternative_titles":["Harry Potter and the Philosopher''s Stone"],"author_names":["J.K. Rowling","Mary GrandPré"],"compilation":false,"description":"Harry Potter has never been the star of a Quidditch team, scoring points while riding a broom far above the ground. He knows no spells, has never helped to hatch a dragon, and has never worn a cloak of invisibility.","featured_series":{"details":"1","featured":true,"id":210168,"position":1.0,"series":{"books_count":52,"id":1185,"name":"Harry Potter","primary_books_count":7,"slug":"harry-potter"},"unreleased":false},"genres":["Fantasy","Fiction","Young Adult"],"has_audiobook":true,"has_ebook":true,"id":"328491","image":{"url":"https://assets.hardcover.app/editions/3890025/4883525795702759-58613380.jpg"},"release_year":1997,"title":"Harry Potter and the Sorcerer''s Stone"}},{"document":{"activities_count":2500,"author_names":["J.K. Rowling"],"description":"The second book in the Harry Potter series.","has_audiobook":true,"has_ebook":true,"id":"328492","image":{"url":"https://assets.hardcover.app/editions/cover2.jpg"},"release_year":1998,"title":"Harry Potter and the Chamber of Secrets"}},{"document":{"activities_count":2100,"author_names":["J.K. Rowling"],"description":"The third book in the Harry Potter series.","has_audiobook":true,"has_ebook":true,"id":"328493","image":{"url":"https://assets.hardcover.app/editions/cover3.jpg"},"release_year":1999,"title":"Harry Potter and the Prisoner of Azkaban"}}]}}}}'
+  recorded_at: Sun, 18 Jan 2026 12:00:00 GMT
+recorded_with: VCR 6.2.0

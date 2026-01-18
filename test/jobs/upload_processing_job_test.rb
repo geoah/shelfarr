@@ -23,6 +23,14 @@ class UploadProcessingJobTest < ActiveJob::TestCase
     # Disable Audiobookshelf
     Setting.where(key: "audiobookshelf_url").destroy_all
 
+    # Set up Hardcover API key for tests
+    Setting.find_or_create_by(key: "hardcover_api_key").update!(
+      value: "test_api_key",
+      value_type: "string",
+      category: "hardcover"
+    )
+    HardcoverClient.reset_connection!
+
     # Create test file
     @test_file = File.join(@temp_source, "Brandon Sanderson - Mistborn.m4b")
     File.write(@test_file, "test audio content")
@@ -40,12 +48,11 @@ class UploadProcessingJobTest < ActiveJob::TestCase
     FileUtils.rm_rf(@temp_source) if @temp_source
     FileUtils.rm_rf(@temp_audiobook_dest) if @temp_audiobook_dest
     FileUtils.rm_rf(@temp_ebook_dest) if @temp_ebook_dest
+    HardcoverClient.reset_connection!
   end
 
   test "processes upload and creates book" do
-    VCR.turned_off do
-      stub_open_library_search("Mistborn Brandon Sanderson")
-
+    with_cassette("hardcover/search_mistborn") do
       assert_difference "Book.count", 1 do
         UploadProcessingJob.perform_now(@upload.id)
       end
@@ -60,9 +67,7 @@ class UploadProcessingJobTest < ActiveJob::TestCase
   end
 
   test "moves file to correct location" do
-    VCR.turned_off do
-      stub_open_library_search("Mistborn Brandon Sanderson")
-
+    with_cassette("hardcover/search_mistborn") do
       UploadProcessingJob.perform_now(@upload.id)
 
       @upload.reload
@@ -74,9 +79,7 @@ class UploadProcessingJobTest < ActiveJob::TestCase
   end
 
   test "handles ebook uploads" do
-    VCR.turned_off do
-      stub_open_library_search("Dune Frank Herbert")
-
+    with_cassette("hardcover/search_dune") do
       ebook_file = File.join(@temp_source, "Frank Herbert - Dune.epub")
       File.write(ebook_file, "test ebook content")
 
@@ -101,9 +104,7 @@ class UploadProcessingJobTest < ActiveJob::TestCase
   end
 
   test "matches existing book instead of creating new" do
-    VCR.turned_off do
-      stub_open_library_search("Mistborn Brandon Sanderson")
-
+    with_cassette("hardcover/search_mistborn") do
       existing = Book.create!(
         title: "Mistborn",
         author: "Brandon Sanderson",
@@ -120,9 +121,7 @@ class UploadProcessingJobTest < ActiveJob::TestCase
   end
 
   test "handles failed processing due to missing file" do
-    VCR.turned_off do
-      stub_open_library_search("Mistborn Brandon Sanderson")
-
+    with_cassette("hardcover/search_mistborn") do
       FileUtils.rm(@test_file)
 
       UploadProcessingJob.perform_now(@upload.id)
@@ -149,9 +148,7 @@ class UploadProcessingJobTest < ActiveJob::TestCase
   end
 
   test "sets processed_at timestamp on success" do
-    VCR.turned_off do
-      stub_open_library_search("Mistborn Brandon Sanderson")
-
+    with_cassette("hardcover/search_mistborn") do
       UploadProcessingJob.perform_now(@upload.id)
 
       @upload.reload
@@ -160,27 +157,12 @@ class UploadProcessingJobTest < ActiveJob::TestCase
   end
 
   test "updates match confidence from parser" do
-    VCR.turned_off do
-      stub_open_library_search("Mistborn Brandon Sanderson")
-
+    with_cassette("hardcover/search_mistborn") do
       UploadProcessingJob.perform_now(@upload.id)
 
       @upload.reload
       assert @upload.match_confidence.present?
       assert @upload.match_confidence > 0
     end
-  end
-
-  private
-
-  def stub_open_library_search(query)
-    # Stub Open Library search to return empty results
-    # This allows tests to focus on file operations and book creation
-    stub_request(:get, %r{https://openlibrary\.org/search\.json})
-      .to_return(
-        status: 200,
-        headers: { "Content-Type" => "application/json" },
-        body: { numFound: 0, docs: [] }.to_json
-      )
   end
 end

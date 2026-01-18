@@ -8,11 +8,13 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@admin)
     AudiobookshelfClient.reset_connection!
     ProwlarrClient.reset_connection!
+    HardcoverClient.reset_connection!
   end
 
   teardown do
     AudiobookshelfClient.reset_connection!
     ProwlarrClient.reset_connection!
+    HardcoverClient.reset_connection!
   end
 
   test "index requires admin" do
@@ -223,6 +225,72 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
 
       assert_redirected_to admin_settings_path
       assert flash[:alert].present?
+    end
+  end
+
+  # Test connection tests for Hardcover
+  test "test_hardcover fails when not configured" do
+    Setting.where(key: "hardcover_api_key").destroy_all
+    HardcoverClient.reset_connection!
+
+    post test_hardcover_admin_settings_url
+
+    assert_redirected_to admin_settings_path
+    assert_match /not configured/i, flash[:alert]
+  end
+
+  test "test_hardcover succeeds when connection works" do
+    SettingsService.set(:hardcover_api_key, "test-api-key")
+    HardcoverClient.reset_connection!
+
+    with_cassette("hardcover/test_connection") do
+      post test_hardcover_admin_settings_url
+
+      assert_redirected_to admin_settings_path
+      assert_match /successful/i, flash[:notice]
+    end
+  end
+
+  test "test_hardcover fails when connection fails" do
+    SettingsService.set(:hardcover_api_key, "invalid-key")
+    HardcoverClient.reset_connection!
+
+    VCR.turned_off do
+      stub_request(:post, "https://api.hardcover.app/v1/graphql")
+        .to_return(status: 401, body: '{"errors":[{"message":"unauthorized"}]}', headers: { "Content-Type" => "application/json" })
+
+      post test_hardcover_admin_settings_url
+
+      assert_redirected_to admin_settings_path
+      assert flash[:alert].present?
+    end
+  end
+
+  test "test_hardcover handles connection errors" do
+    SettingsService.set(:hardcover_api_key, "test-api-key")
+    HardcoverClient.reset_connection!
+
+    VCR.turned_off do
+      stub_request(:post, "https://api.hardcover.app/v1/graphql")
+        .to_timeout
+
+      post test_hardcover_admin_settings_url
+
+      assert_redirected_to admin_settings_path
+      assert flash[:alert].present?
+    end
+  end
+
+  test "test_hardcover returns turbo stream when requested" do
+    SettingsService.set(:hardcover_api_key, "test-api-key")
+    HardcoverClient.reset_connection!
+
+    with_cassette("hardcover/test_connection") do
+      post test_hardcover_admin_settings_url,
+        headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+      assert_response :success
+      assert_match "turbo-stream", response.body
     end
   end
 
@@ -451,5 +519,22 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     # Connection should be reset - either nil or a different object
     new_connection = ProwlarrClient.instance_variable_get(:@connection)
     assert_nil new_connection, "Connection should be reset after prowlarr settings change"
+  end
+
+  test "bulk_update resets hardcover connection when api key changes" do
+    SettingsService.set(:hardcover_api_key, "old-key")
+
+    # Prime the connection with old credentials
+    HardcoverClient.send(:connection)
+    old_connection = HardcoverClient.instance_variable_get(:@connection)
+    assert_not_nil old_connection
+
+    patch bulk_update_admin_settings_url, params: {
+      settings: { hardcover_api_key: "new-key" }
+    }
+
+    # Connection should be reset - either nil or a different object
+    new_connection = HardcoverClient.instance_variable_get(:@connection)
+    assert_nil new_connection, "Connection should be reset after hardcover settings change"
   end
 end
