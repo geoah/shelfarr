@@ -2,7 +2,7 @@
 
 # Processes uploaded files:
 # 1. Parses filename to extract title/author
-# 2. Searches Open Library for metadata
+# 2. Searches Hardcover for metadata
 # 3. Creates book with proper metadata
 # 4. Renames file and moves to library location
 class UploadProcessingJob < ApplicationJob
@@ -32,13 +32,13 @@ class UploadProcessingJob < ApplicationJob
       book_type = upload.infer_book_type
       upload.update!(book_type: book_type)
 
-      # Step 3: Search Open Library for proper metadata
+      # Step 3: Search Hardcover for proper metadata
       metadata = fetch_metadata(parsed.title, parsed.author)
 
       if metadata
         Rails.logger.info "[UploadProcessingJob] Found metadata: '#{metadata.title}' by #{metadata.author}"
       else
-        Rails.logger.info "[UploadProcessingJob] No Open Library match, using parsed filename"
+        Rails.logger.info "[UploadProcessingJob] No Hardcover match, using parsed filename"
       end
 
       # Wrap critical operations in transaction for atomicity
@@ -86,14 +86,15 @@ class UploadProcessingJob < ApplicationJob
 
   private
 
-  # Search Open Library and return the best matching result
+  # Search Hardcover and return the best matching result
   def fetch_metadata(title, author)
     return nil if title.blank?
+    return nil unless HardcoverClient.configured?
 
     # Build search query - include author if available for better results
     query = author.present? ? "#{title} #{author}" : title
 
-    results = OpenLibraryClient.search(query, limit: 5)
+    results = HardcoverClient.search(query, limit: 5)
     return nil if results.empty?
 
     # Score results and pick the best match
@@ -102,8 +103,8 @@ class UploadProcessingJob < ApplicationJob
     # Only return if score is reasonable
     score = score_result(best_match, title, author)
     score >= 30 ? best_match : nil
-  rescue OpenLibraryClient::Error => e
-    Rails.logger.warn "[UploadProcessingJob] Open Library search failed: #{e.message}"
+  rescue HardcoverClient::Error => e
+    Rails.logger.warn "[UploadProcessingJob] Hardcover search failed: #{e.message}"
     nil
   end
 
@@ -152,13 +153,13 @@ class UploadProcessingJob < ApplicationJob
     # Use metadata if available, otherwise fall back to parsed filename
     title = metadata&.title || parsed.title
     author = metadata&.author || parsed.author
-    work_id = metadata&.work_id
-    cover_url = metadata&.cover_url(size: :l)
-    year = metadata&.first_publish_year
+    open_library_work_id = metadata&.id
+    cover_url = metadata&.cover_url
+    year = metadata&.year
 
-    # Check for existing book with same work_id and type
-    if work_id.present?
-      existing = Book.find_by(open_library_work_id: work_id, book_type: book_type)
+    # Check for existing book with same open_library_work_id and type
+    if open_library_work_id.present?
+      existing = Book.find_by(open_library_work_id: open_library_work_id, book_type: book_type)
       return existing if existing
     end
 
@@ -171,7 +172,7 @@ class UploadProcessingJob < ApplicationJob
       title: title,
       author: author,
       book_type: book_type,
-      open_library_work_id: work_id,
+      open_library_work_id: open_library_work_id,
       cover_url: cover_url,
       year: year
     )

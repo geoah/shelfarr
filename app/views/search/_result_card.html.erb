@@ -1,7 +1,7 @@
 <%
   # Check if this book already exists in our system
-  existing_audiobook = Book.find_by(open_library_work_id: result.work_id, book_type: :audiobook)
-  existing_ebook = Book.find_by(open_library_work_id: result.work_id, book_type: :ebook)
+  existing_audiobook = Book.find_by(open_library_work_id: result.id, book_type: :audiobook)
+  existing_ebook = Book.find_by(open_library_work_id: result.id, book_type: :ebook)
 
   audiobook_status = if existing_audiobook&.acquired?
     :acquired
@@ -74,9 +74,9 @@
     </div>
 
     <%# Year Badge (top left) %>
-    <% if result.first_publish_year.present? %>
+    <% if result.year.present? %>
       <span class="absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium bg-black/60 text-white backdrop-blur-sm">
-        <%= result.first_publish_year %>
+        <%= result.year %>
       </span>
     <% end %>
 
@@ -86,11 +86,11 @@
       <div class="flex flex-col gap-2">
         <% if audiobook_status == :available %>
           <%= link_to new_request_path(
-            work_id: result.work_id,
+            work_id: result.id,
             title: result.title,
             author: result.author,
-            cover_id: result.cover_id,
-            first_publish_year: result.first_publish_year,
+            cover_url: result.cover_url,
+            first_publish_year: result.year,
             book_type: 'audiobook'
           ), class: "flex items-center justify-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white transition-colors" do %>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,11 +102,11 @@
 
         <% if ebook_status == :available %>
           <%= link_to new_request_path(
-            work_id: result.work_id,
+            work_id: result.id,
             title: result.title,
             author: result.author,
-            cover_id: result.cover_id,
-            first_publish_year: result.first_publish_year,
+            cover_url: result.cover_url,
+            first_publish_year: result.year,
             book_type: 'ebook'
           ), class: "flex items-center justify-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors" do %>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

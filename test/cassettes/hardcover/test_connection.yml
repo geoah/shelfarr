@@ -1,0 +1,25 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.hardcover.app/v1/graphql
+    body:
+      encoding: UTF-8
+      string: '{"query":"\n        query TestConnection {\n          search(query: \"test\", query_type: Book, per_page: 1) {\n            results\n          }\n        }\n      ","variables":{}}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <HARDCOVER_API_KEY>
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"data":{"search":{"results":{"facet_counts":[],"found":1000,"hits":[{"document":{"author_names":["Test Author"],"description":"A test book.","has_audiobook":true,"has_ebook":true,"id":"999999","image":{"url":"https://assets.hardcover.app/editions/test.jpg"},"release_year":2024,"title":"Test Book"}}]}}}}'
+  recorded_at: Sun, 18 Jan 2026 12:00:00 GMT
+recorded_with: VCR 6.2.0

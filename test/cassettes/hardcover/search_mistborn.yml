@@ -1,0 +1,25 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.hardcover.app/v1/graphql
+    body:
+      encoding: UTF-8
+      string: '{"query":"\n        query SearchBooks($query: String!, $perPage: Int!) {\n          search(query: $query, query_type: Book, per_page: $perPage) {\n            results\n          }\n        }\n      ","variables":{"query":"Mistborn Brandon Sanderson","perPage":5}}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <HARDCOVER_API_KEY>
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"data":{"search":{"results":{"facet_counts":[],"found":0,"hits":[]}}}}'
+  recorded_at: Sun, 18 Jan 2026 12:00:00 GMT
+recorded_with: VCR 6.2.0

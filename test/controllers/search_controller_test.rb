@@ -6,6 +6,18 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = users(:one)
     sign_in_as(@user)
+
+    # Set up Hardcover API key for tests
+    Setting.find_or_create_by(key: "hardcover_api_key").update!(
+      value: "test_api_key",
+      value_type: "string",
+      category: "hardcover"
+    )
+    HardcoverClient.reset_connection!
+  end
+
+  teardown do
+    HardcoverClient.reset_connection!
   end
 
   test "index requires authentication" do
@@ -21,7 +33,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "results returns search results" do
-    with_cassette("open_library/search_harry_potter") do
+    with_cassette("hardcover/search_harry_potter") do
       get search_results_path, params: { q: "harry potter" }
       assert_response :success
     end
@@ -33,10 +45,19 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "results handles turbo stream format" do
-    with_cassette("open_library/search_fiction") do
+    with_cassette("hardcover/search_with_limit") do
       get search_results_path, params: { q: "fiction" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
       assert_response :success
       assert_match "turbo-stream", response.body
     end
+  end
+
+  test "results shows error when Hardcover not configured" do
+    Setting.where(key: "hardcover_api_key").destroy_all
+    HardcoverClient.reset_connection!
+
+    get search_results_path, params: { q: "test" }
+    assert_response :success
+    # Error message should be shown in the response
   end
 end

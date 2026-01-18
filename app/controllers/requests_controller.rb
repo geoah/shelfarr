@@ -20,7 +20,7 @@ class RequestsController < ApplicationController
     @work_id = params[:work_id]
     @title = params[:title]
     @author = params[:author]
-    @cover_id = params[:cover_id]
+    @cover_url = params[:cover_url]
     @first_publish_year = params[:first_publish_year]
 
     if @work_id.blank? || @title.blank?
@@ -70,7 +70,7 @@ class RequestsController < ApplicationController
         book.assign_attributes(
           title: params[:title],
           author: params[:author],
-          cover_url: params[:cover_id].present? ? OpenLibraryClient.cover_url(params[:cover_id], size: :l) : nil,
+          cover_url: params[:cover_url],
           year: params[:first_publish_year]
         )
         book.save!

@@ -25,23 +25,10 @@ class DuplicateDetectionService
   class << self
     # Check if a book can be requested
     # Returns a Result with status, message, and any existing records
-    def check(work_id:, edition_id: nil, book_type:)
+    def check(work_id:, book_type:)
       book_type = book_type.to_s
 
-      # Check 1: Same edition already acquired (most specific)
-      if edition_id.present?
-        existing = Book.find_by(open_library_edition_id: edition_id, book_type: book_type)
-        if existing&.acquired?
-          return Result.new(
-            status: BLOCK,
-            message: "This exact edition is already in your library.",
-            existing_book: existing,
-            existing_request: nil
-          )
-        end
-      end
-
-      # Check 2: Same work + type already acquired
+      # Check 1: Same book + type already acquired
       existing_book = Book.find_by(open_library_work_id: work_id, book_type: book_type)
       if existing_book&.acquired?
         return Result.new(
@@ -52,7 +39,7 @@ class DuplicateDetectionService
         )
       end
 
-      # Check 3: Same work + type has pending/active request
+      # Check 2: Same book + type has pending/active request
       if existing_book
         active_request = existing_book.requests.active.first
         if active_request
@@ -65,7 +52,7 @@ class DuplicateDetectionService
         end
       end
 
-      # Check 4: Same work exists as different type (warn only)
+      # Check 3: Same book exists as different type (warn only)
       other_type = book_type == "audiobook" ? "ebook" : "audiobook"
       other_book = Book.find_by(open_library_work_id: work_id, book_type: other_type)
       if other_book
@@ -77,7 +64,7 @@ class DuplicateDetectionService
         )
       end
 
-      # Check 5: Same work has a failed/not_found request (warn, allow retry)
+      # Check 4: Same book has a failed/not_found request (warn, allow retry)
       if existing_book
         failed_request = existing_book.requests.where(status: [:failed, :not_found]).first
         if failed_request
@@ -100,8 +87,8 @@ class DuplicateDetectionService
     end
 
     # Quick check - just returns true/false for whether request is allowed
-    def can_request?(work_id:, edition_id: nil, book_type:)
-      result = check(work_id: work_id, edition_id: edition_id, book_type: book_type)
+    def can_request?(work_id:, book_type:)
+      result = check(work_id: work_id, book_type: book_type)
       !result.block?
     end
   end

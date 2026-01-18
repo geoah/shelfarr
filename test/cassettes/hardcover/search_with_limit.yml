@@ -1,0 +1,25 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.hardcover.app/v1/graphql
+    body:
+      encoding: UTF-8
+      string: '{"query":"\n        query SearchBooks($query: String!, $perPage: Int!) {\n          search(query: $query, query_type: Book, per_page: $perPage) {\n            results\n          }\n        }\n      ","variables":{"query":"fiction","perPage":5}}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <HARDCOVER_API_KEY>
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"data":{"search":{"results":{"facet_counts":[],"found":50000,"hits":[{"document":{"author_names":["Author One"],"description":"A fiction book.","has_audiobook":false,"has_ebook":true,"id":"100001","image":{"url":"https://assets.hardcover.app/editions/fiction1.jpg"},"release_year":2020,"title":"Fiction Book One"}},{"document":{"author_names":["Author Two"],"description":"Another fiction book.","has_audiobook":true,"has_ebook":true,"id":"100002","image":{"url":"https://assets.hardcover.app/editions/fiction2.jpg"},"release_year":2019,"title":"Fiction Book Two"}},{"document":{"author_names":["Author Three"],"description":"Yet another fiction book.","has_audiobook":true,"has_ebook":false,"id":"100003","image":{"url":"https://assets.hardcover.app/editions/fiction3.jpg"},"release_year":2018,"title":"Fiction Book Three"}},{"document":{"author_names":["Author Four"],"description":"More fiction.","has_audiobook":false,"has_ebook":true,"id":"100004","image":{"url":"https://assets.hardcover.app/editions/fiction4.jpg"},"release_year":2021,"title":"Fiction Book Four"}},{"document":{"author_names":["Author Five"],"description":"The fifth fiction book.","has_audiobook":true,"has_ebook":true,"id":"100005","image":{"url":"https://assets.hardcover.app/editions/fiction5.jpg"},"release_year":2022,"title":"Fiction Book Five"}}]}}}}'
+  recorded_at: Sun, 18 Jan 2026 12:00:00 GMT
+recorded_with: VCR 6.2.0
