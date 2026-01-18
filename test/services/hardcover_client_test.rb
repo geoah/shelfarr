@@ -81,7 +81,7 @@ class HardcoverClientTest < ActiveSupport::TestCase
       title: "Test Book",
       author: "Test Author",
       year: 2020,
-      cover_url: "https://example.com/cover.jpg",
+      cover_image_url: "https://example.com/cover.jpg",
       description: "A test book",
       has_audiobook: true,
       has_ebook: false
@@ -97,13 +97,13 @@ class HardcoverClientTest < ActiveSupport::TestCase
     refute result.has_ebook
   end
 
-  test "cover_url method returns cover_url attribute" do
+  test "cover_url method returns cover_image_url attribute" do
     result = HardcoverClient::SearchResult.new(
       id: "123",
       title: "Test",
       author: nil,
       year: nil,
-      cover_url: "https://example.com/cover.jpg",
+      cover_image_url: "https://example.com/cover.jpg",
       description: nil,
       has_audiobook: false,
       has_ebook: false

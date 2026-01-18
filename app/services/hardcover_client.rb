@@ -13,11 +13,12 @@ class HardcoverClient
   class RateLimitError < Error; end
 
   # Data structure for search results
-  SearchResult = Data.define(:id, :title, :author, :year, :cover_url, :description, :has_audiobook, :has_ebook) do
-    # For compatibility with views that might call cover_url as a method
+  # Note: cover_image_url stores the URL, cover_url method provides compatibility interface
+  SearchResult = Data.define(:id, :title, :author, :year, :cover_image_url, :description, :has_audiobook, :has_ebook) do
+    # For compatibility with views that might call cover_url as a method with size parameter
     def cover_url(size: nil)
       # Hardcover provides full URLs directly, size parameter ignored
-      self[:cover_url]
+      cover_image_url
     end
   end
 
@@ -169,7 +170,7 @@ class HardcoverClient
           title: doc["title"],
           author: Array(doc["author_names"]).first,
           year: doc["release_year"],
-          cover_url: doc.dig("image", "url"),
+          cover_image_url: doc.dig("image", "url"),
           description: doc["description"],
           has_audiobook: doc["has_audiobook"] || false,
           has_ebook: doc["has_ebook"] || false
@@ -186,7 +187,7 @@ class HardcoverClient
         title: book_data["title"],
         author: author,
         year: book_data["release_year"],
-        cover_url: book_data.dig("image", "url"),
+        cover_image_url: book_data.dig("image", "url"),
         description: book_data["description"],
         has_audiobook: false,  # Not available in direct book query
         has_ebook: false
