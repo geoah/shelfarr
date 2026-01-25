@@ -46,6 +46,7 @@ Rails.application.routes.draw do
   resources :requests, only: [:index, :show, :new, :create, :destroy] do
     member do
       get :download
+      post :retry
     end
   end
 
@@ -72,12 +73,6 @@ Rails.application.routes.draw do
         post :test_prowlarr
         post :test_audiobookshelf
         post :test_oidc
-      end
-    end
-    resources :issues, only: [:index] do
-      member do
-        post :retry
-        post :cancel
       end
     end
     resource :bulk_operations, only: [] do
